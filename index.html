@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Life Log – My Digital Twin</title><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Life Log"><meta name="theme-color" content="#0b1f4b"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&family=Nunito:wght@600;800&display=swap">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Life Log – My Digital Twin</title><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Life Log"><meta name="theme-color" content="#0b1f4b"><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" type="image/png" href="icon-192.png"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&family=Nunito:wght@600;800&display=swap">
 <style>
 :root{--bg:#f5f4ef;--c:#fff;--t:#1c1c1a;--m:#76746d;--b:#e3e1d8;--a:#2563eb;--g:#15803d;--r:#dc2626;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121214;--c:#1c1c20;--t:#eeede8;--m:#9b9990;--b:#2d2d33;--a:#8b85ff;--g:#4ade80;--r:#f87171;color-scheme:dark}}
@@ -112,6 +112,7 @@ function uniq(k){return [...new Set(S.entries.map(e=>e[k]).filter(Boolean))].map
 function sgH(){var q=F.desc.trim().toLowerCase(),s={},o=[];S.entries.slice().sort((a,b)=>b.id-a.id).forEach(e=>{var d=e.desc;if(d&&!s[d]&&d.toLowerCase()!=q&&(q?d.toLowerCase().includes(q):e.act==F.act)){s[d]=1;o.push(d)}});window.SG=o.slice(0,6);return SG.map((d,i)=>`<span class='chip' onclick='useD(${i})'>💡 ${esc(d.length>40?d.slice(0,40)+'…':d)}</span>`).join('')}
 function sg(){document.getElementById('sg').innerHTML=sgH()}
 function useD(i){F.desc=SG[i];R()}
+function addPP(){addP(document.getElementById('pp').value)}
 function goLog(){tab='log';R()}
 function dleft(s,y){var t=new Date();t.setHours(0,0,0,0);var d=new Date(s+'T00:00');if(y){d.setFullYear(t.getFullYear());if(d<t)d.setFullYear(t.getFullYear()+1)}return Math.round((d-t)/864e5)}
 function homeInfo(){var t0=new Date();t0.setHours(0,0,0,0);var td=S.entries.slice().sort((a,b)=>b.id-a.id),sl=S.entries.filter(e=>e.act=='Sleep'&&e.dur).sort((a,b)=>b.t-a.t).slice(0,7),av=sl.length?sl.reduce((s,e)=>s+e.dur,0)/sl.length:0,rm=S.rem.filter(r=>!r.done).sort((a,b)=>a.when<b.when?-1:1).slice(0,4),dy=S.days.map(d=>Object.assign({l:dleft(d.date,d.yearly)},d)).filter(d=>d.l>=0).sort((a,b)=>a.l-b.l).slice(0,3),pn=S.plans.reduce((s,p)=>s+(p.kind=='sell'?p.amt:-p.amt),0),bl=S.opening+S.entries.reduce((s,e)=>s+e.amt,0);
@@ -145,7 +146,7 @@ function vLog(){
  <div class='row'><input list='shl' placeholder='Shop / place name' value='${esc(F.shop)}' oninput='F.shop=this.value'><input list='pll' placeholder='Location' value='${esc(F.place)}' oninput='F.place=this.value'></div><textarea rows="2" placeholder="Description (e.g. got a call from… they said…)" oninput="F.desc=this.value;sg()">${esc(F.desc)}</textarea><div id='sg' class='chips'>${sgH()}</div><datalist id='shl'>${uniq('shop')}</datalist><datalist id='pll'>${uniq('place')}</datalist>
  <div class="chips">${F.people.map((p,i)=>`<span class="chip on">${esc(p)} <span onclick="F.people.splice(${i},1);R()">✕</span></span>`).join('')}</div>
  <input id="pp" list="pl" placeholder="People involved – type a name, press Enter" onkeydown="if(event.key=='Enter'){addP(this.value)}">
- <datalist id="pl">${S.people.map(p=>`<option value="${esc(p)}">`).join('')}</datalist>
+ <datalist id="pl">${S.people.map(p=>`<option value="${esc(p)}">`).join('')}</datalist><div class='chips'>${S.people.map((p,i)=>F.people.includes(p)?'':`<span class='chip' onclick='addP(S.people[${i}])'>+ ${esc(p)}</span>`).join('')}</div><button onclick='addPP()'>Add person</button>
  <div class="row"><select onchange="F.sign=+this.value"><option value="0" ${F.sign==0?'selected':''}>No money</option><option value="1" ${F.sign==1?'selected':''}>＋ Money in</option><option value="-1" ${F.sign==-1?'selected':''}>− Money out</option></select>
  <input type="number" min="0" step="any" placeholder="Amount (${S.cur})" value="${F.amt}" oninput="F.amt=this.value"></div>
  <button class="pri" onclick="addEntry()">Save to timeline</button></div>
@@ -153,8 +154,9 @@ function vLog(){
 }
 function addAct(){var v=document.getElementById('na').value.trim();if(v&&!S.acts[v]){S.acts[v]=[];F.act=v;F.sub='';save()}R()}
 function addSub(){var v=document.getElementById('ns').value.trim();if(v&&!S.acts[F.act].includes(v)){S.acts[F.act].push(v);F.sub=v;save()}R()}
-function addP(v){v=v.trim();if(v){if(!S.people.includes(v))S.people.push(v);if(!F.people.includes(v))F.people.push(v);save()}R()}
-function addEntry(){var a=Math.abs(parseFloat(F.amt))||0;S.entries.push({id:Date.now(),t:new Date(F.when).getTime()||Date.now(),act:F.act,sub:F.sub,desc:F.desc.trim(),people:F.people.slice(),shop:F.shop.trim(),place:F.place.trim(),amt:F.sign*a});
+function canon(v){v=v.trim();var f=S.people.find(p=>p.toLowerCase()==v.toLowerCase());if(!f&&v)S.people.push(v);return f||v}
+function addP(v){v=canon(v);if(v){if(!F.people.includes(v))F.people.push(v);save()}R()}
+function addEntry(){var pe=document.getElementById('pp'),pv=pe?canon(pe.value):'';if(pv&&!F.people.includes(pv))F.people.push(pv);var a=Math.abs(parseFloat(F.amt))||0;S.entries.push({id:Date.now(),t:new Date(F.when).getTime()||Date.now(),act:F.act,sub:F.sub,desc:F.desc.trim(),people:F.people.slice(),shop:F.shop.trim(),place:F.place.trim(),amt:F.sign*a});
  F.desc='';F.people=[];F.amt='';F.shop='';F.place='';F.sign=0;F.when=loc(now());save();R()}
 function del(id){if(confirm('Delete this entry?')){S.entries=S.entries.filter(e=>e.id!=id);save();R()}}
 function range(){var d=new Date(P.date+'T00:00'),s=new Date(d),e=new Date(d);
@@ -177,7 +179,7 @@ function copyRep(){var q=report(),t=`${P.per.toUpperCase()} REPORT ${new Date(q.
  try{navigator.clipboard.writeText(t);alert('Copied')}catch(e){prompt('Copy:',t)}}
 function vPpl(){return `<h1>👯 People</h1><div class="sub">Your points of contact. New names from the Log also land here.</div>
  <div class="card"><div class="row"><input id="np" placeholder="Add a name"><button onclick="var v=document.getElementById('np').value.trim();if(v&&!S.people.includes(v)){S.people.push(v);save()}R()">Add</button></div>
- ${S.people.map((p,i)=>`<div class="ev"><div class="l"><b>${esc(p)}</b><div class="sub">${S.entries.filter(e=>e.people.includes(p)).length} interactions</div></div><button class="x" onclick="S.people.splice(${i},1);save();R()">✕</button></div>`).join('')||'<div class="m" style="margin-top:8px">No people yet.</div>'}</div>`}
+ ${S.people.map((p,i)=>`<div class="ev"><div class="l"><b>${esc(p)}</b><div class="sub">${S.entries.filter(e=>(e.people||[]).some(x=>x.toLowerCase()==p.toLowerCase())).length} interactions</div></div><button class="x" onclick="S.people.splice(${i},1);save();R()">✕</button></div>`).join('')||'<div class="m" style="margin-top:8px">No people yet.</div>'}</div>`}
 function vCar(){return `<h1>🚗 Car</h1><div class="sub">Expiry dates only – no sensitive data.</div><div class="card">
  ${S.car.map((c,i)=>{var d=c.d?Math.ceil((new Date(c.d)-now())/864e5):null;return `<div class="ev"><div class="l"><b>${esc(c.n)}</b><input type="date" value="${c.d}" onchange="S.car[${i}].d=this.value;save();R()"></div><div class="amt ${d==null?'m':d<30?'r':'g'}">${d==null?'—':d<0?'Expired':d+' days'}</div><button class="x" onclick="S.car.splice(${i},1);save();R()">✕</button></div>`}).join('')}
  <div class="row" style="margin-top:8px"><input id="nc" placeholder="Add item (e.g. Service due)"><button onclick="var v=document.getElementById('nc').value.trim();if(v){S.car.push({n:v,d:''});save()}R()">Add</button></div></div>`}
